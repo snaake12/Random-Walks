@@ -1,32 +1,41 @@
 import random
-def randomWalks(N,q):
-    energy = 0
+
+
+def randomWalks(N, q):
+    energy = 5
     time = 0
     pos = random.randint(0, N)
-    state = True
-    while state:
-        if time !=0 and energy == 0:
-            state = False
-            break
+    while energy > 0:
+
         if pos == 0 or pos == N:
-            stays = True
-            while stays == True:
-                stays = random.random()<q
-                energy +=1
-                time+=1
+
+            while random.uniform(0.0, 1.0) <= q:
+                energy += 1
+                time += 1
+
+            energy -= 1
+            time += 1
+            if pos == 0:
+                pos += 1
+
+            elif pos == N:
+                pos -= 1
+
         else:
-            moveUp = random.random()<0.5
+            moveUp = random.uniform(0.0, 1.0) <= 0.5
+            energy -= 1
+            time += 1
             if moveUp:
-                pos+=1
-                energy -=1
-                time+=1
+                pos += 1
+
             else:
-                pos-=1
-                energy-=1
-                time+=1
+                pos -= 1
+
     return time
+
+
 len = int(input("Enter lattice length: "))
-prob =float(input("Enter probability: "))
+prob = float(input("Enter probability: "))
 resultTime = randomWalks(len, prob)
 print(f"Total time taken is: {resultTime}")
-            
+
