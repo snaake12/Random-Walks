@@ -23,8 +23,6 @@ def randomWalks(N, q):
 
         else:
             moveUp = random.random() < 0.5
-            energy -= 1
-            time += 1
             if moveUp:
                 pos += 1
 
