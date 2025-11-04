@@ -3,13 +3,16 @@ import random
 
 def randomWalks(N, q):
     energy = 5
+    maxEn = 100
     time = 0
     pos = random.randint(0, N)
     while energy > 0:
 
         if pos == 0 or pos == N:
-
+            
             while random.uniform(0.0, 1.0) <= q:
+                if energy>=maxEn:
+                    break
                 energy += 1
                 time += 1
 
