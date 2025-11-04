@@ -22,7 +22,7 @@ def randomWalks(N, q):
                 pos -= 1
 
         else:
-            moveUp = random.uniform(0.0, 1.0) <= 0.5
+            moveUp = random.random() < 0.5
             energy -= 1
             time += 1
             if moveUp:
@@ -34,7 +34,7 @@ def randomWalks(N, q):
     return time
 
 
-len = int(input("Enter lattice length: "))
+latticeLen = int(input("Enter lattice length: "))
 prob = float(input("Enter probability: "))
-resultTime = randomWalks(len, prob)
+resultTime = randomWalks(latticeLen, prob)
 print(f"Total time taken is: {resultTime}")
