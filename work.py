@@ -7,24 +7,29 @@ with open("data.csv", 'w') as f:
     writer = csv.writer(f)
     writer.writerow(columns.split(", "))
 
+finalLine = None
 with open("data.csv", 'r') as r:
-    for line in r: pass
-    finalLine = list(line)
+    for line in r: 
+        if line.strip():
+            finalLine = line.strip()
+if finalLine:
     finalVal = finalLine[0]
-print(finalVal)
+    print(finalVal)
+else:
+    print("Error: File is empty or only contains blank lines. ")
+    finalVal = None
 
 def randomWalks(N, q):
     energy = 5
-    maxEn = 100
     time = 0
     pos = random.randint(0, N)
+    startpos = pos
     while energy > 0:
 
         if pos == 0 or pos == N:
             
             while random.uniform(0.0, 1.0) <= q:
-                if energy>=maxEn:
-                    break
+                
                 energy += 1
                 time += 1
 
@@ -44,13 +49,32 @@ def randomWalks(N, q):
             else:
                 pos -= 1
 
-    return time
+    return time, startpos, pos
+
+def writeData(dataRow):
+    with open("data.csv", 'a', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(dataRow)
+
+def prevRunNum():
+    with open("data.csv", 'r') as f:
+        allrows = list(csv.reader(f))
+        if not allrows:
+            finalVal = "File is empty"
+        else:
+            lastRow = allrows[-1]
+            finalVal = lastRow[0]
+        return finalVal
 
 def monteCarloSim(num):
     survivalTimes=[]
     for i in range (num):
-        time = randomWalks(latticeLen, prob)
+        time, startpos, pos = randomWalks(latticeLen, prob)
         survivalTimes.append(time)
+        runnum = prevRunNum()
+        currentRow = [runnum, latticeLen, prob, time, startpos, pos]
+        writeData(currentRow)
+
     return survivalTimes
 
 latticeLen = int(input("Enter lattice length: "))
