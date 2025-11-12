@@ -87,24 +87,6 @@ def plotGraph():
     plt.tight_layout()
     plt.show()
 
-"""
-with open("data.csv", 'w') as f:
-    writer = csv.writer(f)
-    writer.writerow(columns.split(", "))
-
-finalLine = None
-with open("data.csv", 'r') as r:
-    for line in r: 
-        if line.strip():
-            finalLine = line.strip()
-if finalLine:
-    finalVal = finalLine[0]
-    print(finalVal)
-else:
-    print("Error: File is empty or only contains blank lines. ")
-    finalVal = None
-"""
-
 def randomWalks(N, q):
     energy = 5
     maxTime = 1000000
@@ -117,9 +99,12 @@ def randomWalks(N, q):
         if pos == 0 or pos == N:
             
             while random.uniform(0, 1) <= q:
-                
+                if time>=maxTime:
+                    break
                 energy += 1
                 time += 1
+            if time>=maxTime:
+                break
             if energy>0:
                 energy -= 1
                 time += 1
@@ -132,6 +117,8 @@ def randomWalks(N, q):
                 break
 
         elif energy>0:
+            if time>=maxTime:
+                break
             moveUp = random.random() < 0.5
             energy-=1
             time+=1
@@ -162,32 +149,14 @@ def monteCarloSim(num, N, q):
 
 createCSV()
 
+#This section is required to populate the csv with the monte carlo simulations for the given lattice lengths and probabilities, since it has already been populated it is commented out#
 """
-validInput = False
-while not validInput:
+Nvalues = list(range(2,51))
+Qvalues = np.linspace(0.01, 0.99, 99)
+runsPerCombo = 50
 
-    try: 
-        latticeLen = int(input("Enter lattice length: "))
-        prob = float(input("Enter probability: "))
-        simNum = int(input("Enter the number of simulations you would like to run: "))
-        survivalTimes =monteCarloSim(simNum)
-
-        if not (0<prob<1):
-
-    except ValueError:
-        print("Invalid input. Please enter an integer for lattice length and a float for probability.")
-"""
-
-Nvalues = [2,3,4]
-Qvalues = np.linspace(0.1, 0.9, 9)
-runsPerCombo = 20
-"""
-
-Nvalues = list(range(2, 7))
-Qvalues = np.linspace(0.1, 0.9, 9)
-runsPerCombo = 30
-"""
 for N in Nvalues:
     for q in Qvalues:
         monteCarloSim(runsPerCombo, N, q)
+"""
 plotGraph()
