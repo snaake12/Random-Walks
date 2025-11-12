@@ -107,11 +107,13 @@ else:
 
 def randomWalks(N, q):
     energy = 5
+    maxTime = 1000000
     time = 0
     pos = random.randint(0, N)
     startpos = pos
     while energy >= 0:
-
+        if time>= maxTime:
+            break
         if pos == 0 or pos == N:
             
             while random.uniform(0, 1) <= q:
@@ -139,19 +141,22 @@ def randomWalks(N, q):
             else:
                 pos -= 1
 
-        elif energy == 0:
+        else:
             break
 
     return time, startpos, pos
 
 def monteCarloSim(num, N, q):
     survivalTimes=[]
+    runnum = runNum()
     for i in range (num):
         time, startpos, pos = randomWalks(N, q)
         survivalTimes.append(time)
-        runnum = runNum()
+        
+        print("Adding", runnum, "th row to csv")
         currentRow = [runnum, N, q, time, startpos, pos]
         writeData(currentRow)
+        runnum+=1
 
     return survivalTimes
 
@@ -173,10 +178,15 @@ while not validInput:
         print("Invalid input. Please enter an integer for lattice length and a float for probability.")
 """
 
-Nvalues = list(range(2, 51, 2))
+Nvalues = [2,3,4]
 Qvalues = np.linspace(0.1, 0.9, 9)
-runsPerCombo = 100
+runsPerCombo = 20
+"""
 
+Nvalues = list(range(2, 7))
+Qvalues = np.linspace(0.1, 0.9, 9)
+runsPerCombo = 30
+"""
 for N in Nvalues:
     for q in Qvalues:
         monteCarloSim(runsPerCombo, N, q)
