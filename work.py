@@ -5,9 +5,10 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 import os
-
+import matplotlib.cm as cm
+import matplotlib.colors as colors
 filename = "data.csv"
-columns = ["Run Number", "Lattice Length", "Probability", "Survival Time", "Starting Position", "Final Position"]
+columns = ["Run Number", "Lattice Length", "Probability", "Survival Time", "Starting Position", "Final Position", "Initial Energy"]
 
 def createCSV():
     #Writes column headers if the file does not exist or is empty
@@ -43,7 +44,10 @@ def runNum():
 def plotGraph():
     try:
         df = pd.read_csv(filename)
-        meanDF = df.groupby(['Lattice Length', 'Probability']).agg(
+        #df_filtered = df[df['Starting Position']!=0]
+        df_filtered = df[df['Starting Position']!=df['Lattice Length']]
+        #df_filtered = df_filtered[(df_filtered['Lattice Length']>=27) & (df_filtered['Lattice Length']<=50)]
+        meanDF = df_filtered.groupby(['Lattice Length', 'Probability']).agg(
             meanSurvivalTime = ('Survival Time', 'mean')
         ).reset_index()
     except FileNotFoundError:
@@ -53,14 +57,19 @@ def plotGraph():
         print("Error: file is empty.")
         return 
     #Plot 1, effect of lattice length
+    probs = sorted(meanDF['Probability'].unique())
+    cmapProb = cm.get_cmap('viridis')
+    normProb = colors.Normalize(vmin=min(probs), vmax=max(probs))
     plt.figure(figsize=(12,5))
 
     plt.subplot(1,2,1)
-    for prob in meanDF['Probability'].unique():
+    for prob in probs:
         subset = meanDF[meanDF['Probability'] == prob]
+        plot_color = cmapProb(normProb(prob))
         plt.scatter(
             subset['Lattice Length'],
             subset['meanSurvivalTime'],
+            color=plot_color,
             label = f'q={prob:.2f}'
         )
     plt.title('Effect of Lattice Length on Survival Time')
@@ -69,35 +78,47 @@ def plotGraph():
     plt.legend(title ='Boundary Prob. (q)')
     plt.grid(True, linestyle= '--', alpha=0.6)   
 
+    sm_prob = cm.ScalarMappable(cmap=cmapProb, norm=normProb)
+    sm_prob.set_array([]) 
+    cbar_prob = plt.colorbar(sm_prob, ax=plt.gca(), orientation='vertical', pad=0.05)
+    cbar_prob.set_label('Boundary Probability ($q$)')
     #Plot 2, effect of probability
     plt.subplot(1,2,2)
+    Nvals = sorted(meanDF['Lattice Length'].unique())
+    cmapN = cm.get_cmap('plasma')
+    normN = colors.Normalize(vmin=min(Nvals), vmax=max(Nvals))
 
-    for Nval in meanDF['Lattice Length'].unique():
+    for Nval in Nvals:
         subset = meanDF[meanDF['Lattice Length']==Nval]
+        plotColor = cmapN(normN(Nval))
         plt.scatter(
             subset['Probability'],
             subset['meanSurvivalTime'],
+            color=plotColor,
             label = f'N={Nval}'
         )
     plt.title('Effect of Boundary Probability on Survival Time')
-    plt.xlabel('Boundary Stay Probability')
+    plt.xlabel('Boundary Probability')
     plt.ylabel('Mean Survival Time')
     plt.legend(title= 'Lattice Length' )
     plt.grid(True, linestyle='--', alpha=0.6)
+    sm_N = cm.ScalarMappable(cmap=cmapN, norm=normN)
+    sm_N.set_array([])
+    cbar_N = plt.colorbar(sm_N, ax=plt.gca(), orientation='vertical', pad=0.05)
+    cbar_N.set_label('Lattice Length ($N$)')
     plt.tight_layout()
     plt.show()
 
 def randomWalks(N, q):
-    energy = 5
-    maxTime = 1000000
+    global initialEnergy
+    initialEnergy = 50
+    energy = initialEnergy
+    maxTime = 10000
     time = 0
-    pos = random.randint(0, N)
+    pos = random.choice([0, N])
     startpos = pos
-    while energy >= 0:
-        if time>= maxTime:
-            break
-        if pos == 0 or pos == N:
-            
+    while energy > 0 and time<maxTime:   
+        if pos == 0 or pos == N: 
             while random.uniform(0, 1) <= q:
                 if time>=maxTime:
                     break
@@ -105,20 +126,15 @@ def randomWalks(N, q):
                 time += 1
             if time>=maxTime:
                 break
-            if energy>0:
-                energy -= 1
-                time += 1
-                if pos == 0:
-                    pos += 1
+            
+            energy -= 1
+            time += 1
+            if pos == 0:
+                pos += 1
 
-                elif pos == N:
-                    pos -= 1
-            else:
-                break
-
-        elif energy>0:
-            if time>=maxTime:
-                break
+            elif pos == N:
+                pos -= 1 
+        else:
             moveUp = random.random() < 0.5
             energy-=1
             time+=1
@@ -128,8 +144,6 @@ def randomWalks(N, q):
             else:
                 pos -= 1
 
-        else:
-            break
 
     return time, startpos, pos
 
@@ -141,7 +155,7 @@ def monteCarloSim(num, N, q):
         survivalTimes.append(time)
         
         print("Adding", runnum, "th row to csv")
-        currentRow = [runnum, N, q, time, startpos, pos]
+        currentRow = [runnum, N, q, time, startpos, pos, initialEnergy]
         writeData(currentRow)
         runnum+=1
 
@@ -150,13 +164,16 @@ def monteCarloSim(num, N, q):
 createCSV()
 
 #This section is required to populate the csv with the monte carlo simulations for the given lattice lengths and probabilities, since it has already been populated it is commented out#
-"""
-Nvalues = list(range(2,51))
-Qvalues = np.linspace(0.01, 0.99, 99)
-runsPerCombo = 50
+#Nvalues = list(range(2,10))
+#Qvalues = np.linspace(0.1, 0.9, 9)
+
+Nvalues = 4,5,6
+Qvalues = 0.8, 0.83333, 0.857143
+runsPerCombo = 10
 
 for N in Nvalues:
     for q in Qvalues:
         monteCarloSim(runsPerCombo, N, q)
-"""
+
+
 plotGraph()
