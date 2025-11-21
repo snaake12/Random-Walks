@@ -8,7 +8,12 @@ import os
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 filename = "data.csv"
-columns = ["Run Number", "Lattice Length", "Probability", "Survival Time", "Starting Position", "Final Position", "Initial Energy"]
+columns = ["Run Number", "Lattice Length", "Probability", "Survival Time", "Starting Position", "Final Position", "Initial Energy", "Maximum Time"]
+
+def addColumnOne():
+    df = pd.read_csv(filename)
+    df['Maximum Energy'] = 1000
+    df.to_csv(filename, index=False)
 
 def createCSV():
     #Writes column headers if the file does not exist or is empty
@@ -109,11 +114,9 @@ def plotGraph():
     plt.tight_layout()
     plt.show()
 
-def randomWalks(N, q):
-    global initialEnergy
-    initialEnergy = 50
+def randomWalks(N, q, initialEnergy):
     energy = initialEnergy
-    maxTime = 10000
+    maxTime = 98
     time = 0
     pos = random.choice([0, N])
     startpos = pos
@@ -145,17 +148,17 @@ def randomWalks(N, q):
                 pos -= 1
 
 
-    return time, startpos, pos
+    return time, startpos, pos, maxTime
 
-def monteCarloSim(num, N, q):
+def monteCarloSim(num, N, q, initialEnergy):
     survivalTimes=[]
     runnum = runNum()
     for i in range (num):
-        time, startpos, pos = randomWalks(N, q)
+        time, startpos, pos, maxTime = randomWalks(N, q, initialEnergy)
         survivalTimes.append(time)
         
         print("Adding", runnum, "th row to csv")
-        currentRow = [runnum, N, q, time, startpos, pos, initialEnergy]
+        currentRow = [runnum, N, q, time, startpos, pos, initialEnergy, maxTime]
         writeData(currentRow)
         runnum+=1
 
@@ -166,7 +169,7 @@ createCSV()
 #This section is required to populate the csv with the monte carlo simulations for the given lattice lengths and probabilities, since it has already been populated it is commented out#
 #Nvalues = list(range(2,10))
 #Qvalues = np.linspace(0.1, 0.9, 9)
-
+"""
 Nvalues = 4,5,6
 Qvalues = 0.8, 0.83333, 0.857143
 runsPerCombo = 10
@@ -174,6 +177,7 @@ runsPerCombo = 10
 for N in Nvalues:
     for q in Qvalues:
         monteCarloSim(runsPerCombo, N, q)
-
-
+"""
+monteCarloSim(1, 5, 0.7, 50)
+#addColumnOne()
 plotGraph()
